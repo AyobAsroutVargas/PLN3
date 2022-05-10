@@ -64,12 +64,17 @@ positiveModel = np.delete(positiveModel, 0)
 
 neg_model_info = negativeModel[:1]
 pos_model_info = positiveModel[:1]
-# data["processed tweets"] = data["Tweet"].apply(lambda x: preprocess_tweet(x))
+data["processed tweets"] = data["Tweet"].apply(lambda x: preprocess_tweet(x))
 
-# tweets = data["processed tweets"].tolist()
+tweets = data["processed tweets"].tolist()
 
 negative_frequences = []
 negative_logProbs = []
+words = []
+
+for row in negativeModel:
+  temp = row.split(' ')
+  words.append(temp[1])
 
 for row in negativeModel:
   temp = row.split(' ')
@@ -84,6 +89,32 @@ for row in positiveModel:
   positive_frequences.append(temp[3])
   positive_logProbs.append(temp[5])
 
+clasificationFile = open("clasificacion_alu0101350158.txt", "w+")
+resumenClasificationFile = open("resumen_alu0101350158.txt", "w+")
+
+tweetIndex = 0
 for tweet in tweets:
+  probPos = 0
+  probNeg = 0
+  firstCharacters = data["Tweet"][tweetIndex][0 : 10]
   for word in tweet:
-    
+    try:
+      wordIndex = words.index(word)
+    except:
+      wordIndex = words.index("<UNK>")
+
+    if positive_logProbs[wordIndex] == 0:
+      wordIndex = words.index("<UNK>")
+    if negative_logProbs[wordIndex] == 0:
+      wordIndex = words.index("<UNK>")
+      
+    probPos = probPos + float(positive_logProbs[wordIndex])
+    probNeg = probNeg + float(negative_logProbs[wordIndex])
+
+  if probPos > probNeg:
+    clasificationFile.write(firstCharacters + ", " + str(probPos) + ", " + str(probNeg) + ", " + "P\n")
+    resumenClasificationFile.write("P\n")
+  else:
+    clasificationFile.write(firstCharacters + ", " + str(probPos) + ", " + str(probNeg) + ", " + "N\n")
+    resumenClasificationFile.write("N\n")
+  tweetIndex = tweetIndex + 1

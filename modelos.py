@@ -4,6 +4,7 @@ from pathlib import Path
 import numpy as np
 import re
 import pandas as pd
+import math
 from math import log
 
 def readFromFile(name):
@@ -45,30 +46,42 @@ for word in pos_basic_info:
 for word in neg_basic_info:
   negativeModel.write(word + "\n")
 
-positive_unknowns = 0
-negative_unknowns = 0
+# positive_unknowns = 0
+# negative_unknowns = 0
+unknowns = 0
 
 for word in vocabulary:
   wordNegativeFrequency = negativeCounter[word]
-  if wordNegativeFrequency > 3:
+  wordPositiveFrequency = positiveCounter[word]
+
+  if wordNegativeFrequency + wordNegativeFrequency > 3:
     logProbability = log(wordNegativeFrequency + 1) - log(negativeCorpus.size + vocabulary.size)
     negativeModel.write("\nPalabra: " + word + " Frec: " + str(wordNegativeFrequency) + " LogProb: " + str(logProbability))
+
+    logProbabilityN = log(wordPositiveFrequency + 1) - log(positiveCorpus.size + vocabulary.size)
+    positiveModel.write("\nPalabra: " + word + " Frec: " + str(wordPositiveFrequency) + " LogProb: " + str(logProbabilityN))
   else:
-    negative_unknowns += 1
+    negativeModel.write("\nPalabra: " + word + " Frec: 0 " + "LogProb: 0")
+    positiveModel.write("\nPalabra: " + word + " Frec: 0 " + "LogProb: 0")
+    if wordNegativeFrequency + wordNegativeFrequency > 0:
+      unknowns += wordNegativeFrequency + wordNegativeFrequency #1
+    else:
+      unknowns += 1
 
-  wordPositiveFrequency = positiveCounter[word]
-  if wordPositiveFrequency > 3:
-    logProbability = log(wordPositiveFrequency + 1) - log(positiveCorpus.size + vocabulary.size)
-    positiveModel.write("\nPalabra: " + word + " Frec: " + str(wordPositiveFrequency) + " LogProb: " + str(logProbability))
-  else:
-    positive_unknowns += 1
+  # if wordNegativeFrequency + wordNegativeFrequency > 3:
+  #   logProbabilityN = log(wordPositiveFrequency + 1) - log(positiveCorpus.size + vocabulary.size)
+  #   positiveModel.write("\nPalabra: " + word + " Frec: " + str(wordPositiveFrequency) + " LogProb: " + str(logProbabilityN))
+  # else:
+  #   positiveModel.write("\nPalabra: " + word + " Frec: 0 " + " LogProb: 0")
+  #   unknowns += 1
 
 
-negative_unknown_logProb = log(negative_unknowns + 1) - log(negativeCorpus.size + vocabulary.size)
-negativeModel.write("\nPalabra: <UNK>" + " Frec: " + str(negative_unknowns) + " LogProb: " + str(negative_unknown_logProb))
+negative_unknown_logProb = log(unknowns + 1) - log(negativeCorpus.size + vocabulary.size)
+negativeModel.write("\nPalabra: <UNK>" + " Frec: " + str(unknowns) + " LogProb: " + str(negative_unknown_logProb))
 
-positive_unknown_logProb = log(positive_unknowns + 1) - log(positiveCorpus.size + vocabulary.size)
-positiveModel.write("\nPalabra: <UNK>" + " Frec: " + str(positive_unknowns) + " LogProb: " + str(positive_unknown_logProb))
+
+positive_unknown_logProb = log(unknowns + 1) - log(positiveCorpus.size + vocabulary.size)
+positiveModel.write("\nPalabra: <UNK>" + " Frec: " + str(unknowns) + " LogProb: " + str(positive_unknown_logProb))
 
 positiveModel.close()
 negativeModel.close()
